@@ -18,8 +18,11 @@ module.exports = function(config) {
                 if (err) {
                     next(err);
                 } else {
+                    // sort in descending order of confidence so the most likely match is first.
                     console.log(JSON.stringify(res));
-                    message.intents = res.outcomes;
+                    message.outcomes = res.outcomes.sort(function(a,b) {
+                        return b.confidence - a.confidence;
+                    });
                     next();
                 }
             });
@@ -27,13 +30,15 @@ module.exports = function(config) {
 
     };
 
+    //What is tests?
     middleware.hears = function(tests, message) {
-
-        if (message.intents) {
-            for (var i = 0; i < message.intents.length; i++) {
+      var entities = message.outcomes[0].entities;
+        if (entities) {
+            for (var i = 0; i < entities.intent.length; i++) {
                 for (var t = 0; t < tests.length; t++) {
-                    if (message.intents[i].intent == tests[t] &&
-                        message.intents[i].confidence >= config.minimum_confidence) {
+                  console.log(i, t, entities.intent[i].value)
+                    if (entities.intent[i].value == tests[t] &&
+                        entities.intent[i].confidence >= config.minimum_confidence) {
                         return true;
                     }
                 }
